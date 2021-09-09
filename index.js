@@ -6,16 +6,16 @@ exports.handler = async (event) => {
   let { key, size } = event.Records[0].s3.object;
   let imageData = { key, size };
   //get the metaData JSON from our bucket
-  let metaData = await s3.getObject({
-    Bucket: 'codefellows-lambda-output',
-    Key: 'images.json',
-  });
-  let metaDataUsable = JSON.parse(metaData);
-  console.log(metaDataUsable);
+  let data = await s3
+    .getObject({
+      Bucket: 'codefellows-lambda-output',
+      Key: 'images.json',
+    })
+    .promise();
+  let metaDataUsable = JSON.parse(data.Body);
+
   //add our new imageData in
   metaDataUsable.push(imageData);
-
-  console.log(metaDataUsable);
 
   const uploadParams = {
     Bucket: 'codefellows-lambda-output',
@@ -27,7 +27,7 @@ exports.handler = async (event) => {
 
   //upload the modified JSON file
   try {
-    const data = await s3.send(new PutObjectCommand(uploadParams));
+    const data = await s3.upload(uploadParams);
     console.log('Success', data);
     return data;
   } catch (err) {
